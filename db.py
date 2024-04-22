@@ -48,3 +48,14 @@ class DataBase:
             answer = self.cursor.execute(f"SELECT answer FROM "
                                          f"users WHERE user_id = '{user_id}'").fetchall()
             return answer[0][0]
+
+    def add_income(self, income, user_id, category):
+        with self.connection:
+            self.cursor.execute(f"INSERT INTO users_data (`user_id`, `income`, `income_category`) "
+                                f"VALUES({user_id}, '{income}', '{category}')")
+
+    def get_income_category(self, user_id):
+        with self.connection:
+            income_category = self.cursor.execute(f"SELECT income_category FROM "
+                                                  f"users_data WHERE user_id = '{user_id}'").fetchall()
+        return [i[0] for i in income_category]

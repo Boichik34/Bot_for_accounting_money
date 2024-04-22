@@ -47,3 +47,21 @@ def get_answer(user_id):
 def get_password(user_id):
     db = DataBase("../Bot_for_accounting_money/database")
     return db.get_password(user_id)
+
+
+def add_income(income, user_id, category):
+    db = DataBase("../Bot_for_accounting_money/database")
+    db.add_income(income, user_id, category)
+
+
+def check_income(income):
+    if income.isdigit():
+        return True
+    else:
+        return False
+
+
+def get_income_category(user_id):
+    db = DataBase("../Bot_for_accounting_money/database")
+    lst = list(set(db.get_income_category(user_id)))
+    return lst

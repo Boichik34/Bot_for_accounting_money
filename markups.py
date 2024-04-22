@@ -47,3 +47,13 @@ def get_markups_for_password_recovery():
     markup.row(btn1)
     markup.row(btn2)
     return markup
+
+
+def get_markup_for_income_category(lst):
+    markup = types.InlineKeyboardMarkup()
+    for el in lst:
+        el = types.InlineKeyboardButton(text=f"{el}", callback_data=f"{el}")
+        markup.row(el)
+    btn = types.InlineKeyboardButton(text="Выбрать новую категорию", callback_data="Выбрать новую категорию")
+    markup.row(btn)
+    return markup

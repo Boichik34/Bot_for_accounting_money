@@ -35,27 +35,7 @@ def authorization_handler(message):
 
 @bot.message_handler(commands=["add_income"])
 def add_income_handler(message):
-    application.set_state("add_income")
-    bot.send_message(message.chat.id, "Напишите сумму, которую хотите добавить.")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    to_add_income_category(message)
 
 
 
@@ -75,15 +55,6 @@ def stop__authorization(call):
     bot.send_message(call.message.chat.id, "Авторизация остановлена. "
                                            "Перейдите в меню для выбора "
                                            "команды для продолжения", reply_markup=markup)
-
-
-def registration(message):
-    application.set_state("registration")
-    bot.send_message(message.chat.id, f"Ваш 'ник' {message.from_user.first_name}. \n"
-                                      f"Введите пароль\n"
-                                      f"Его длина должна быть от 3 до 5 символов\n"
-                                      f"он не должен содержать символов,\n"
-                                      f"только буквы и цыфры")
 
 
 @bot.callback_query_handler(func=lambda call: call.data == "Восстановить пароль.")
@@ -125,23 +96,79 @@ def add_question_for_password_recovery(call):
     bot.register_next_step_handler(answer, add_question, f"{call.data}")
 
 
+@bot.callback_query_handler(func=lambda call: application.get_state() == "chose_income_category")
+def chose_income_category(call):
+    if call.data == "Выбрать новую категорию":
+        application.set_state("write_income_category")
+        bot.send_message(call.message.chat.id, "Напишите название категории")
+    else:
+        application.set_category(call.data)
+        input_income(call.message)
+
+
+
+
+
+
+def registration(message):
+    application.set_state("registration")
+    bot.send_message(message.chat.id, f"Ваш 'ник' {message.from_user.first_name}. \n"
+                                      f"Введите пароль\n"
+                                      f"Его длина должна быть от 3 до 5 символов\n"
+                                      f"он не должен содержать символов,\n"
+                                      f"только буквы и цыфры")
+
+
+
 def add_question(answer, string):
     logic.add_question_and_answer(string, answer.text, answer.from_user.id)
     bot.send_message(answer.chat.id, "Данные для восстановления пароля добавлены")
 
 
+def to_add_income_category(message):
+    category_lst = logic.get_income_category(message.from_user.id)
+    if category_lst:
+        show_income_category(message, category_lst)
+    else:
+        chose_new_income_category(message)
+
+
+def show_income_category(message, category_list):
+    application.set_state("chose_income_category")
+    markup = markups.get_markup_for_income_category(category_list)
+    bot.send_message(message.chat.id, "Выбери одну из уже добавленных категорий "
+                                      "или добавь новую", reply_markup=markup)
+
+
+def chose_new_income_category(message):
+    application.set_state("write_income_category")
+    bot.send_message(message.chat.id, "Это твоя первая категория, напиши ее название.")
+
+
+def input_income(message):
+    application.set_state("add_income")
+    bot.send_message(message.chat.id, "Введи сумму")
 
 
 
 
+@bot.message_handler(func=lambda message: application.get_state() == "write_income_category")
+def new_income_category_handler(message):
+    application.set_category(message.text)
+    input_income(message)
 
 
-
-
-
-
-
-
+@bot.message_handler(func=lambda message: application.get_state() == "add_income")
+def add_income_message_handler(message):
+    if logic.check_income(message.text):
+        application.set_state(None)
+        logic.add_income(message.text, message.from_user.id, application.get_category())
+        bot.send_message(message.chat.id, "Доход добавлен.\n"
+                                          "Выбери команду в Меню для продолжения.")
+        application.set_category(None)
+    else:
+        bot.send_message(message.chat.id, "Некорректный ввод!")
+        input_income(message)
 
 
 
